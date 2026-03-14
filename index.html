@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWait Doctor Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">ZW</div>
+                <span>ZeroWait</span>
+            </div>
+            
+            <div class="mic-container">
+                <div class="mic-ring outer-ring"></div>
+                <div class="mic-ring inner-ring"></div>
+                <button id="mic-btn" class="mic-button">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mute-controls">
+                <button id="mute-in-btn" class="mute-btn" title="Mute Microphone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mic-on"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-mic-off hidden"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
+                <button id="mute-out-btn" class="mute-btn" title="Mute Assistant Voice">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-vol-on"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-vol-off hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                </button>
+            </div>
+            
+            <div class="sidebar-status">
+                <span class="status-dot"></span> Secure Session
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Progress Bar -->
+            <header class="topbar">
+                <div class="progress-bar" id="progress-bar">
+                    <div class="step" data-state="GREETING">
+                        <div class="step-icon">1</div>
+                        <span class="step-text">Greeting</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step" data-state="VERIFY">
+                        <div class="step-icon">2</div>
+                        <span class="step-text">Verify</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step" data-state="WAIT_INFO">
+                        <div class="step-icon">3</div>
+                        <span class="step-text">Status</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step" data-state="RESCHED">
+                        <div class="step-icon">4</div>
+                        <span class="step-text">Options</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step" data-state="DONE">
+                        <div class="step-icon">5</div>
+                        <span class="step-text">Complete</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-area">
+                <!-- VIEW: Greeting -->
+                <div class="view-panel active" id="view-greeting">
+                    <div class="hero-text">
+                        <div class="pulse-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5v14M22 10v4M7 5v14M2 10v4"/></svg>
+                        </div>
+                        <h1>Healthcare Without the Wait</h1>
+                        <p>Speak clearly, and the assistant will guide you through check-in.</p>
+                    </div>
+                    <div class="hint-cards">
+                        <div class="hint-card">
+                            <div class="hint-icon blue">1</div>
+                            <h3>Say your Name</h3>
+                            <p>e.g. "I'm Maya Rodriguez"</p>
+                        </div>
+                        <div class="hint-card">
+                            <div class="hint-icon teal">2</div>
+                            <h3>Date of Birth</h3>
+                            <p>e.g. "Born March 4, 1989"</p>
+                        </div>
+                        <div class="hint-card">
+                            <div class="hint-icon purple">3</div>
+                            <h3>State Intent</h3>
+                            <p>Check in or notify if late</p>
+                        </div>
+                        <div class="hint-card">
+                            <div class="hint-icon green">4</div>
+                            <h3>Hands-free</h3>
+                            <p>No tapping required</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Verify -->
+                <div class="view-panel" id="view-verify">
+                    <div class="verify-container">
+                        <div class="loader"></div>
+                        <h2 class="mt-4 text-xl font-semibold">Verifying Identity...</h2>
+                        <p class="text-gray-500">Please hold on for just a moment.</p>
+                    </div>
+                </div>
+
+                <!-- VIEW: Wait Info & Reschedule -->
+                <div class="view-panel" id="view-wait">
+                    <div class="split-card shadow-lg">
+                        <div class="doctor-profile purple-gradient">
+                            <div class="doc-avatar">
+                                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=150" alt="Doctor" />
+                            </div>
+                            <h2>Dr. Lee</h2>
+                            <p>Cardiology</p>
+                            <div class="doc-time">
+                                <span>Scheduled:</span>
+                                <strong>3:00 PM</strong>
+                            </div>
+                        </div>
+                        <div class="action-details">
+                            <h3 id="wait-status-heading">Checking Status</h3>
+                            <div class="status-box" id="wait-status-box">
+                                <span class="status-label">Expected wait time:</span>
+                                <strong class="status-value" id="wait-status-value">--</strong>
+                            </div>
+                            
+                            <div id="resched-options" class="resched-options" style="display: none;">
+                                <p class="mb-2 font-medium">Available alternatives:</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Done -->
+                <div class="view-panel" id="view-done">
+                    <div class="success-card shadow-lg">
+                        <div class="success-header">
+                            <div class="success-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <h2>You're all set!</h2>
+                        </div>
+                        <div class="success-body">
+                            <div class="success-item">
+                                <span>Status</span>
+                                <strong class="green-text" id="final-status-text">Checked In</strong>
+                            </div>
+                            <div class="success-item">
+                                <span>Time</span>
+                                <strong id="final-time-text">3:00 PM</strong>
+                            </div>
+                            <div class="success-item">
+                                <span>Provider</span>
+                                <strong>Dr. Lee</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Error -->
+                <div class="view-panel" id="view-error">
+                    <div class="error-card shadow-lg">
+                        <div class="error-header">
+                            <div class="error-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            </div>
+                            <h2>Connection Error</h2>
+                        </div>
+                        <div class="error-body">
+                            <p class="text-gray-500 mb-2">We encountered a secure connection issue with the assistant.</p>
+                            <button id="retry-btn" class="retry-btn">Retry Connection</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="captions-area shadow-md">
+                <div class="tooltip-container" id="tooltip-container">
+                    <div id="tooltip" class="tooltip hidden">Identity confirmed</div>
+                </div>
+                <div class="caption-content">
+                    <div id="user-caption" class="caption user-caption">Speak into the microphone...</div>
+                    <div id="assistant-caption" class="caption assistant-caption">Assistant: Hello! I’m ready when you are. Please tell me your full name and date of birth.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
