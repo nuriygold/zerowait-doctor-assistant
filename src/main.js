@@ -561,33 +561,76 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
 
     processIncomingText(text) {
          this.textBuffer += text;
-         
-         // Dynamically extract complete JSON objects from the text buffer
-         const rule = /(\{\s*"ui_state"\s*:[^}]+\})/g;
-         let match;
-         let jsonFound = false;
-         
-         while ((match = rule.exec(this.textBuffer)) !== null) {
-             try {
-                 const uiConfig = JSON.parse(match[1]);
-                 this.handleAssistantResponse({
-                      ui_state: uiConfig.ui_state,
-                      tooltip: uiConfig.tooltip
-                 });
-                 jsonFound = true;
-             } catch(e) { 
-                 // Partial or invalid JSON
+
+         // Extract only the first complete UI JSON object once available.
+         const findFirstUiStateJson = (input) => {
+             const key = '"ui_state"';
+             const keyIndex = input.indexOf(key);
+             if (keyIndex === -1) return null;
+
+             let start = input.lastIndexOf('{', keyIndex);
+             while (start !== -1) {
+                 let depth = 0;
+                 let inString = false;
+                 let escaped = false;
+
+                 for (let i = start; i < input.length; i++) {
+                     const char = input[i];
+
+                     if (inString) {
+                         if (escaped) {
+                             escaped = false;
+                         } else if (char === '\\') {
+                             escaped = true;
+                         } else if (char === '"') {
+                             inString = false;
+                         }
+                         continue;
+                     }
+
+                     if (char === '"') {
+                         inString = true;
+                     } else if (char === '{') {
+                         depth++;
+                     } else if (char === '}') {
+                         depth--;
+                         if (depth === 0) {
+                             const candidate = input.slice(start, i + 1);
+                             try {
+                                 const parsed = JSON.parse(candidate);
+                                 if (parsed && parsed.ui_state) {
+                                     return {
+                                         start,
+                                         end: i + 1,
+                                         parsed
+                                     };
+                                 }
+                             } catch (e) {
+                                 // Not valid JSON yet; continue scanning.
+                             }
+                         }
+                     }
+                 }
+
+                 start = input.lastIndexOf('{', start - 1);
              }
+
+             return null;
+         };
+
+         const extracted = findFirstUiStateJson(this.textBuffer);
+         if (extracted) {
+             this.handleAssistantResponse({
+                  ui_state: extracted.parsed.ui_state,
+                  tooltip: extracted.parsed.tooltip
+             });
+
+             this.textBuffer = `${this.textBuffer.slice(0, extracted.start)}${this.textBuffer.slice(extracted.end)}`;
          }
-         
-         // Remove parsed UI JSON tags from buffer to avoid displaying them
-         if (jsonFound) {
-             this.textBuffer = this.textBuffer.replace(rule, '');
-         }
-         
+
          // Clean out 'Assistant:' prefix and trim
          const cleanText = this.textBuffer.replace(/Assistant:\s*/gi, '').trim();
-         
+
          if (cleanText) {
              this.assistantCaption.textContent = cleanText;
          }
