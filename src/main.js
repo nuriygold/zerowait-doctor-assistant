@@ -255,11 +255,12 @@ class AssistantApp {
             }
 
             // 2. Initialize Gemini Live Session
-            this.session = await this.ai.clients.createLiveSession({
+            this.session = await this.ai.live.connect({
                  model: 'models/gemini-2.0-flash-exp', // Or appropriately configured live model
-                 systemInstruction: {
-                      parts: [{
-                           text: `You are “zerowait doctor assistant,” the voice-only front desk for a medical clinic.
+                 config: {
+                      systemInstruction: {
+                           parts: [{
+                                text: `You are “zerowait doctor assistant,” the voice-only front desk for a medical clinic.
 You must be highly conversational, empathetic, and customer-service oriented.
 Do not act like a rigid robot. If the patient asks an off-script question, answer it helpfully while guiding them back.
 
@@ -285,25 +286,29 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
 • Use 12-hour times with AM/PM (e.g., 3 : 45 PM).  
 • Never reveal inner reasoning, implementation notes, or raw JSON outside the single tag.  
 • No markdown formatting.`
-                      }]
-                 },
-                 tools: [
-                      {
-                            functionDeclarations: [
-                                 getUpcomingAppointmentsToolDescription,
-                                 getWaitStatusToolDescription,
-                                 getAvailableSlotsToolDescription,
-                                 rescheduleAppointmentToolDescription,
-                                 checkInToolDescription
-                            ]
-                      }
-                 ],
-                 voiceName: 'Aoede', // Select a voice
-                 responseModalities: ["AUDIO", "TEXT"]
+                           }]
+                      },
+                      tools: [
+                           {
+                                 functionDeclarations: [
+                                      getUpcomingAppointmentsToolDescription,
+                                      getWaitStatusToolDescription,
+                                      getAvailableSlotsToolDescription,
+                                      rescheduleAppointmentToolDescription,
+                                      checkInToolDescription
+                                 ]
+                           }
+                      ],
+                      speechConfig: {
+                           voiceConfig: {
+                                prebuiltVoiceConfig: {
+                                     voiceName: "Aoede"
+                                }
+                           }
+                      },
+                      responseModalities: ["AUDIO", "TEXT"]
+                 }
             });
-
-            // 3. Connect to the WebSocket
-            await this.session.connect();
 
             // 4. Setup Audio Input (Mic to Gemini)
             this.setupAudioInput();
@@ -393,11 +398,25 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
     }
 
     async listenToSession() {
-        try {
-            for await (const message of this.session) {
-                
+        if (!this.session || !this.session.conn) {
+             console.error("No valid session or WebSocket connection found.");
+             return;
+        }
+
+        const ws = this.session.conn;
+
+        ws.addEventListener('message', async (event) => {
+            try {
+                let data = event.data;
+                if (data instanceof Blob) {
+                    data = await data.text();
+                } else if (data instanceof ArrayBuffer) {
+                    data = new TextDecoder().decode(data);
+                }
+                const message = JSON.parse(data);
+
                 // Handle text responses (used for captions and UI contract)
-                if (message.serverContent?.modelTurn) {
+                if (message.serverContent && message.serverContent.modelTurn) {
                      const parts = message.serverContent.modelTurn.parts;
                      for (const part of parts) {
                           if (part.text) {
@@ -411,7 +430,7 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
                      }
                 }
 
-                if (message.serverContent?.turnComplete) {
+                if (message.serverContent && message.serverContent.turnComplete) {
                      this.textBuffer = ""; // Reset buffer for the next conversation turn
                 }
 
@@ -419,12 +438,23 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
                 if (message.toolCall) {
                      await this.handleToolCall(message.toolCall);
                 }
+            } catch (err) {
+                 console.error("Live stream parsing error:", err);
             }
-        } catch (e) {
-             console.error("Session loop ended or errored:", e);
-             this.handleAssistantResponse({ ui_state: 'ERROR', text: 'Connection lost or errored out.' });
-             this.stopSession();
-        }
+        });
+
+        ws.addEventListener('error', (err) => {
+            console.error("Live stream error:", err);
+            this.handleAssistantResponse({
+                ui_state: "ERROR",
+                text: "Connection lost or errored out."
+            });
+            this.stopSession();
+        });
+
+        ws.addEventListener('close', () => {
+             console.log("WebSocket connection closed.");
+        });
     }
     
     // Play back Base64 PCM audio data received from the assistant.
@@ -779,5 +809,5 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
 
 // Start the app
 window.addEventListener('load', () => {
-    new AssistantApp();
+    window.app = new AssistantApp();
 });
