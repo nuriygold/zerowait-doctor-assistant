@@ -269,7 +269,9 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
 2. Capture the patient’s FULL LEGAL NAME and DATE OF BIRTH naturally in conversation.
    • If a name or DOB is unclear, politely ask for clarification.
 3. Look up the patient’s next appointment using getUpcomingAppointments.
-4. Inform them of their wait status using getWaitStatus.
+4. Inform them of their wait status using getWaitStatus. 
+   • If the delay is greater than 0, explicitly calculate and verbally inform them of their new expected time (e.g., if their appointment is 3:00 PM and the delay is 45 minutes, tell them they will be seen around 3:45 PM). 
+   • Gracefully and conversationally answer questions like "Is my doctor running late?" by stating the delay and the newly calculated time.
 5. If they are late or need to move their appointment, use getAvailableSlots to suggest two sensible new times (the first slot ≥ 30 min later plus one later option) and reschedule on their choice using rescheduleAppointment.
 6. Confirm check-in (completeCheckIn tool) or reschedule, ask whether they need anything else, then politely sign out.
 
@@ -528,6 +530,10 @@ Do not act like a rigid robot. If the patient asks an off-script question, answe
                    if (timeEl) timeEl.textContent = this.formatTime12Hour(responseContent.datetime);
 
               } else if (name === 'getWaitStatus') {
+                   // Introduce a mixed-bag delay for demo purposes (0, 15, 30, or 45 mins)
+                   const mockDelays = [0, 15, 30, 45];
+                   CONFIG.delayMinutes = mockDelays[Math.floor(Math.random() * mockDelays.length)];
+                   
                    responseContent = {
                         delayMinutes: CONFIG.delayMinutes 
                    };
